@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: MIT 
+pragma solidity 0.8.26;
+
+interface MyBank{
+    function deposit() external payable;
+    function withraw(uint256 amount) external;
+    function getBalance(address account) external view returns( uint256);
+}
+abstract contract BankBase {
+    mapping(address=> uint256) internal balances;
+
+    function getBalance(address account) public view virtual returns(uint256){
+        return balances[account];
+    }
+    function deposit() public virtual payable;
+    function withraw(uint256 amount) public virtual;
+}
+
+contract Bank is MyBank , BankBase {
+    function deposit() public override(BankBase,MyBank) payable {
+        require(msg.value>0,"Deposit amount must be greater than zero");
+        balances[msg.sender]+= msg.value;
+    }
+    function withraw(uint256 amount) public override(BankBase, MyBank){
+        require(amount<=balances[msg.sender],"insufficient balance");
+        balances[msg.sender]-=amount;
+        payable(msg.sender).transfer(amount);
+    }
+    function getBalance(address account) public view override(BankBase, MyBank) returns(uint256){
+        return balances[account];
+    }
+}
